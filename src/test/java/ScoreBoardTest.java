@@ -49,6 +49,15 @@ public class ScoreBoardTest {
     }
 
     @Test
+    void startMatch_shouldRenameIfCaseTypoInTeamName_evenWithManyWordsPerTeam() {
+        scoreBoard.startMatch("uNited sTates", "UniTed kIngDom");
+        Match match = scoreBoard.getSummary().getFirst();
+
+        assertEquals("United States", match.getHomeTeam());
+        assertEquals("United Kingdom", match.getAwayTeam());
+    }
+
+    @Test
     void startMatch_shouldThrowExceptionIfTeamNameIsNull() {
         assertThrows(IllegalArgumentException.class, () -> scoreBoard.startMatch(null, "Poland"));
         assertThrows(IllegalArgumentException.class, () -> scoreBoard.startMatch("Germany", null));
@@ -63,32 +72,40 @@ public class ScoreBoardTest {
     @Test
     void startMatch_shouldThrowExceptionIfMatchAlreadyExist() {
         scoreBoard.startMatch("Mexico", "Canada");
-        assertThrows(IllegalStateException.class, () -> scoreBoard.startMatch("Mexico", "Canada"));
+
+        assertThrows(IllegalStateException.class,
+                () -> scoreBoard.startMatch("Mexico", "Canada")
+        );
     }
 
     @Test
     void startMatch_shouldThrowExceptionIfTeamNamesAreTheSame() {
-        assertThrows(IllegalStateException.class, () -> scoreBoard.startMatch("Mexico", "Mexico"));
+        assertThrows(IllegalArgumentException.class,
+                () -> scoreBoard.startMatch("Mexico", "Mexico")
+        );
     }
 
     @Test
     void startMatch_shouldThrowExceptionIfMatchAlreadyExist_caseTypoInTeamName() {
         scoreBoard.startMatch("Mexico", "Canada");
-        assertThrows(IllegalStateException.class, () -> scoreBoard.startMatch("meXico", "canadA"));
+
+        assertThrows(IllegalStateException.class,
+                () -> scoreBoard.startMatch("meXico", "canadA")
+        );
     }
 
     @Test
-    void finishMatch_shouldRemoveMatch() {
+    void finishMatch_shouldFinishMatch() {
         scoreBoard.startMatch("Germany", "Poland");
-        scoreBoard.removeMatch("Germany", "Poland");
+        scoreBoard.finishMatch("Germany", "Poland");
 
         assertTrue(scoreBoard.getSummary().isEmpty());
     }
 
     @Test
-    void finishMatch_shouldRemoveMatch_caseTypoInTeamName() {
+    void finishMatch_shouldFinishMatch_caseTypoInTeamName() {
         scoreBoard.startMatch("Germany", "Poland");
-        scoreBoard.removeMatch("geRMaNy", "PolAND");
+        scoreBoard.finishMatch("geRMaNy", "PolAND");
 
         assertTrue(scoreBoard.getSummary().isEmpty());
     }
@@ -96,7 +113,7 @@ public class ScoreBoardTest {
     @Test
     void finishMatch_shouldThrowExceptionIfMatchNotExist() {
         assertThrows(IllegalStateException.class,
-                () -> scoreBoard.removeMatch("Germany", "Poland")
+                () -> scoreBoard.finishMatch("Germany", "Poland")
         );
     }
 
@@ -232,16 +249,16 @@ public class ScoreBoardTest {
     void getSummary_matchesWithSameTotalScore_shouldBeSortedByMostRecent() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime nowMinusOneSecond = now.minusSeconds(1);
-        scoreBoard.startMatch("TeamA", "TeamB", 3, 3, nowMinusOneSecond);
-        scoreBoard.startMatch("TeamC", "TeamD", 4, 2, now);
+        scoreBoard.startMatch("A", "B", 3, 3, nowMinusOneSecond);
+        scoreBoard.startMatch("C", "D", 4, 2, now);
 
         List<Match> summary = scoreBoard.getSummary();
 
-        assertEquals("TeamC", summary.get(0).getHomeTeam());
-        assertEquals("TeamD", summary.get(0).getAwayTeam());
+        assertEquals("C", summary.get(0).getHomeTeam());
+        assertEquals("D", summary.get(0).getAwayTeam());
 
-        assertEquals("TeamA", summary.get(1).getHomeTeam());
-        assertEquals("TeamB", summary.get(1).getAwayTeam());
+        assertEquals("A", summary.get(1).getHomeTeam());
+        assertEquals("B", summary.get(1).getAwayTeam());
     }
 
     @Test
