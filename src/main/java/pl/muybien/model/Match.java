@@ -10,14 +10,34 @@ public class Match {
     private final LocalDateTime startTime;
 
     public Match(String homeTeam, String awayTeam, LocalDateTime startTime) {
-        this.homeTeam = homeTeam;
-        this.awayTeam = awayTeam;
-        this.startTime = startTime;
+        this(homeTeam, awayTeam, 0, 0, startTime);
     }
 
     public Match(String homeTeam, String awayTeam, int homeScore, int awayScore, LocalDateTime startTime) {
+        if (homeTeam == null || homeTeam.isBlank()) {
+            throw new IllegalArgumentException("homeTeam is null or empty");
+        }
+
+        if (awayTeam == null || awayTeam.isBlank()) {
+            throw new IllegalArgumentException("awayTeam is null or empty");
+        }
+
+        if (homeScore < 0) {
+            throw new IllegalArgumentException("homeScore is negative");
+        }
+
+        if (awayScore < 0) {
+            throw new IllegalArgumentException("awayScore is negative");
+        }
+
+        if (homeTeam.equals(awayTeam)) {
+            throw new IllegalArgumentException("Home and away team cannot be the same");
+        }
+
         this.homeTeam = homeTeam;
         this.awayTeam = awayTeam;
+        this.homeScore = homeScore;
+        this.awayScore = awayScore;
         this.startTime = startTime;
     }
 
@@ -34,6 +54,7 @@ public class Match {
     }
 
     public void setHomeScore(int homeScore) {
+        validateScore(homeScore, "home");
         this.homeScore = homeScore;
     }
 
@@ -42,6 +63,7 @@ public class Match {
     }
 
     public void setAwayScore(int awayScore) {
+        validateScore(awayScore, "away");
         this.awayScore = awayScore;
     }
 
@@ -52,5 +74,9 @@ public class Match {
     @Override
     public String toString() {
         return String.format("%s %d - %s %d", homeTeam, homeScore, awayTeam, awayScore);
+    }
+
+    private void validateScore(int score, String type) {
+        if (score < 0) throw new IllegalArgumentException(type + "Score cannot be negative");
     }
 }
