@@ -1,3 +1,6 @@
+# Command Line Interface
+**If you want to try how it works in CLI, just run ScoreBoardApp**
+
 # Design Explanation
 
 **Why use LinkedHashMap to store matches?**
