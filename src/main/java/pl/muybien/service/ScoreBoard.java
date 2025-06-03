@@ -30,12 +30,12 @@ public class ScoreBoard {
     }
 
     public void finishMatch(String homeTeam, String awayTeam) {
-        NormalizedTeams normalizedTeams = normalizeTeams(homeTeam, awayTeam);
-        if (!matches.containsKey(normalizedTeams.key)) {
+        NormalizedTeams nTeams = normalizeTeams(homeTeam, awayTeam);
+        if (!matches.containsKey(nTeams.key)) {
             throw new IllegalStateException("Match does not exist");
         }
 
-        matches.remove(normalizedTeams.key);
+        matches.remove(nTeams.key);
     }
 
     public void updateScore(String homeTeam, String awayTeam, int homeScore, int awayScore) {
@@ -64,11 +64,11 @@ public class ScoreBoard {
             throw new IllegalArgumentException("Team name cannot be null");
         }
 
-        String trimmed = teamName.trim();
-        if (trimmed.isBlank()) {
+        if (teamName.isBlank()) {
             throw new IllegalArgumentException("Team name cannot be blank");
         }
 
+        String trimmed = teamName.trim();
         String[] words = trimmed.split("\\s+");
         StringBuilder result = new StringBuilder();
 
@@ -90,6 +90,7 @@ public class ScoreBoard {
         String normalizedHome = normalizeTeamName(homeTeam);
         String normalizedAway = normalizeTeamName(awayTeam);
         String key = generateMatchKey(normalizedHome, normalizedAway);
+
         return new NormalizedTeams(normalizedHome, normalizedAway, key);
     }
 }
