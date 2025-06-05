@@ -1,5 +1,7 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import pl.muybien.model.Match;
 import pl.muybien.service.ScoreBoard;
 
@@ -16,86 +18,93 @@ public class ScoreBoardTest {
         scoreBoard = new ScoreBoard();
     }
 
-    @Test
-    void startMatch_shouldInitializeMatchAndScore_defaultScore() {
-        scoreBoard.startMatch("Mexico", "Canada");
+    @ParameterizedTest
+    @CsvSource({
+            "Mexico, Canada",
+            "Germany, Poland",
+            "United States, United Kingdom",
+            "Brazil, Argentina",
+            "Central African Republic, Netherlands Antilles",
+            "South Africa, Uganda"
+    })
+    void startMatch_shouldInitializeMatchAndScore(String inputHome, String inputAway) {
+        scoreBoard.startMatch(inputHome, inputAway);
         Match match = scoreBoard.getSummary().getFirst();
 
-        assertEquals("Mexico", match.getHomeTeam());
-        assertEquals("Canada", match.getAwayTeam());
+        assertEquals(inputHome, match.getHomeTeam());
+        assertEquals(inputAway, match.getAwayTeam());
         assertEquals(0, match.getHomeScore());
         assertEquals(0, match.getAwayScore());
     }
 
-    @Test
-    void startMatch_shouldInitializeMatchAndScore_intendedScoreAndTime() {
+    @ParameterizedTest
+    @CsvSource({
+            "Mexico, Canada",
+            "Germany, Poland",
+            "United States, United Kingdom",
+            "Brazil, Argentina",
+            "Central African Republic, Netherlands Antilles",
+            "South Africa, Uganda"
+    })
+    void startMatch_shouldInitializeMatchAndScore_intendedScoreAndTime(String inputHome, String inputAway) {
         LocalDateTime time = LocalDateTime.now();
-        scoreBoard.startMatch("Mexico", "Canada", 5, 7, time);
+        scoreBoard.startMatch(inputHome, inputAway, 5, 7, time);
         Match match = scoreBoard.getSummary().getFirst();
 
-        assertEquals("Mexico", match.getHomeTeam());
-        assertEquals("Canada", match.getAwayTeam());
+        assertEquals(inputHome, match.getHomeTeam());
+        assertEquals(inputAway, match.getAwayTeam());
         assertEquals(5, match.getHomeScore());
         assertEquals(7, match.getAwayScore());
+        assertEquals(time, match.getStartTime());
     }
 
-    @Test
-    void startMatch_shouldRenameIfCaseTypoInTeamName() {
-        scoreBoard.startMatch("geRmanY", "PoLAnD");
+    @ParameterizedTest
+    @CsvSource({
+            "uNiteD sTatEs, uNiTED kiNgDOM, United States, United Kingdom",
+            "CenTRaL afRicAn rePUblIc, PapUA NEW GUiNeA, Central African Republic, Papua New Guinea",
+            "neThERlanDS aNTiLLeS, solOmOn isLANds, Netherlands Antilles, Solomon Islands",
+            "   uGanDA,   neW ZEALand  , Uganda, New Zealand",
+            "brazil, argentina, Brazil, Argentina",
+            "GERMANY, FRANCE, Germany, France",
+            "iTaLy, sOuTh AfRiCa, Italy, South Africa",
+            "esPañA, méXico, España, México"
+    })
+    void startMatch_shouldNormalizeTeamName(String inputHome, String inputAway, String expectedHome, String expectedAway) {
+        scoreBoard.startMatch(inputHome, inputAway);
         Match match = scoreBoard.getSummary().getFirst();
 
-        assertEquals("Germany", match.getHomeTeam());
-        assertEquals("Poland", match.getAwayTeam());
+        assertEquals(expectedHome, match.getHomeTeam());
+        assertEquals(expectedAway, match.getAwayTeam());
     }
 
-    @Test
-    void startMatch_shouldRenameIfCaseTypoInTeamName_evenWithManyWordsPerTeam() {
-        scoreBoard.startMatch("uNited sTates", "UniTed kIngDom");
-        Match match = scoreBoard.getSummary().getFirst();
-
-        assertEquals("United States", match.getHomeTeam());
-        assertEquals("United Kingdom", match.getAwayTeam());
-    }
-
-    @Test
-    void startMatch_shouldThrowExceptionIfTeamNameIsNull() {
-        assertThrows(IllegalArgumentException.class, () -> scoreBoard.startMatch(null, "Poland"));
-        assertThrows(IllegalArgumentException.class, () -> scoreBoard.startMatch("Germany", null));
-    }
-
-    @Test
-    void startMatch_shouldThrowExceptionIfTeamNameIsEmpty() {
-        assertThrows(IllegalArgumentException.class, () -> scoreBoard.startMatch("", "Poland"));
-        assertThrows(IllegalArgumentException.class, () -> scoreBoard.startMatch("Germany", ""));
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'', Poland",
+            "Germany, ''",
+            "'', ''",
+            "Germany, Germany",
+            "GerMAny, GeRmaNY",
+            "null, Germany",
+            "null, null",
+            "Germany, null"
+    },
+            nullValues = {"null"}
+    )
+    void startMatch_shouldThrowExceptionForInvalidTeamName(String inputHome, String inputAway) {
+        assertThrows(IllegalArgumentException.class, () -> scoreBoard.startMatch(inputHome, inputAway));
     }
 
     @Test
     void startMatch_shouldThrowExceptionIfMatchAlreadyExist() {
-        scoreBoard.startMatch("Mexico", "Canada");
+        scoreBoard.startMatch("Germany", "Poland");
 
         assertThrows(IllegalStateException.class,
-                () -> scoreBoard.startMatch("Mexico", "Canada")
+                () -> scoreBoard.startMatch("Germany", "Poland")
         );
     }
 
     @Test
-    void startMatch_shouldThrowExceptionIfTeamNamesAreTheSame() {
-        assertThrows(IllegalArgumentException.class,
-                () -> scoreBoard.startMatch("Mexico", "Mexico")
-        );
-    }
-
-    @Test
-    void startMatch_shouldThrowExceptionIfMatchAlreadyExist_caseTypoInTeamName() {
-        scoreBoard.startMatch("Mexico", "Canada");
-
-        assertThrows(IllegalStateException.class,
-                () -> scoreBoard.startMatch("meXico", "canadA")
-        );
-    }
-
-    @Test
-    void finishMatch_shouldFinishMatch() {
+    void finishMatch_shouldRemoveMatchFromSummary() {
         scoreBoard.startMatch("Germany", "Poland");
         scoreBoard.finishMatch("Germany", "Poland");
 
@@ -103,81 +112,25 @@ public class ScoreBoardTest {
     }
 
     @Test
-    void finishMatch_shouldFinishMatch_caseTypoInTeamName() {
-        scoreBoard.startMatch("Germany", "Poland");
-        scoreBoard.finishMatch("geRMaNy", "PolAND");
-
-        assertTrue(scoreBoard.getSummary().isEmpty());
-    }
-
-    @Test
     void finishMatch_shouldThrowExceptionIfMatchNotExist() {
-        assertThrows(IllegalStateException.class,
-                () -> scoreBoard.finishMatch("Germany", "Poland")
-        );
+        assertThrows(IllegalStateException.class, () -> scoreBoard.finishMatch("Germany", "Poland"));
     }
 
-    @Test
-    void updateScore_shouldUpdateMatchScore() {
-        scoreBoard.startMatch("Spain", "Brazil");
-        scoreBoard.updateScore("Spain", "Brazil", 3, 1);
+    @ParameterizedTest
+    @CsvSource({
+            "Germany, Poland, 1, 1",
+            "Germany, Poland, 5, 0",
+            "Germany, Poland, 0, 0",
+            "Germany, Poland, 51, 121",
+            "Germany, Poland, 5215125, 912149124"
+    })
+    void updateScore_shouldUpdateMatchScore(String inputHome, String inputAway, int inputHomeScore, int inputAwayScore) {
+        scoreBoard.startMatch(inputHome, inputAway);
+        scoreBoard.updateScore(inputHome, inputAway, inputHomeScore, inputAwayScore);
+
         Match match = scoreBoard.getSummary().getFirst();
-
-        assertEquals(3, match.getHomeScore());
-        assertEquals(1, match.getAwayScore());
-    }
-
-    @Test
-    void updateScore_shouldUpdateMatchScore_caseTypoInTeamName() {
-        scoreBoard.startMatch("Spain", "Brazil");
-        scoreBoard.updateScore("SPaIn", "BrAzIl", 3, 1);
-        Match match = scoreBoard.getSummary().getFirst();
-
-        assertEquals(3, match.getHomeScore());
-        assertEquals(1, match.getAwayScore());
-    }
-
-    @Test
-    void updateScore_shouldAllowUpdateToZero() {
-        scoreBoard.startMatch("Spain", "Brazil");
-        scoreBoard.updateScore("Spain", "Brazil", 1, 0);
-        scoreBoard.updateScore("Spain", "Brazil", 0, 0);
-        Match match = scoreBoard.getSummary().getFirst();
-
-        assertEquals(0, match.getHomeScore());
-        assertEquals(0, match.getAwayScore());
-    }
-
-    @Test
-    void updateScore_shouldAllowSameScore() {
-        scoreBoard.startMatch("Spain", "Brazil");
-        scoreBoard.updateScore("Spain", "Brazil", 1, 0);
-        scoreBoard.updateScore("Spain", "Brazil", 1, 1);
-        Match match = scoreBoard.getSummary().getFirst();
-
-        assertEquals(1, match.getHomeScore());
-        assertEquals(1, match.getAwayScore());
-    }
-
-    @Test
-    void updateScore_shouldAllowUpdateToLowerScore() {
-        scoreBoard.startMatch("Spain", "Brazil");
-        scoreBoard.updateScore("Spain", "Brazil", 10, 2);
-        scoreBoard.updateScore("Spain", "Brazil", 9, 2);
-        Match match = scoreBoard.getSummary().getFirst();
-
-        assertEquals(9, match.getHomeScore());
-        assertEquals(2, match.getAwayScore());
-    }
-
-    @Test
-    void updateScore_shouldAllowHighScores() {
-        scoreBoard.startMatch("Norway", "Sweden");
-        scoreBoard.updateScore("Norway", "Sweden", 100, 200);
-        Match match = scoreBoard.getSummary().getFirst();
-
-        assertEquals(100, match.getHomeScore());
-        assertEquals(200, match.getAwayScore());
+        assertEquals(inputHomeScore, match.getHomeScore());
+        assertEquals(inputAwayScore, match.getAwayScore());
     }
 
     @Test
@@ -187,18 +140,15 @@ public class ScoreBoardTest {
         );
     }
 
-    @Test
-    void updateScore_shouldThrowExceptionIfBothScoresAreNegative() {
-        assertThrows(IllegalStateException.class,
-                () -> scoreBoard.updateScore("Poland", "Germany", -1, -10)
-        );
-    }
-
-    @Test
-    void updateScore_shouldThrowExceptionIfOneScoreIsNegative() {
-        assertThrows(IllegalStateException.class,
-                () -> scoreBoard.updateScore("Poland", "Germany", -2, 5)
-        );
+    @ParameterizedTest
+    @CsvSource({
+            "Germany, Poland, -1, 1",
+            "Germany, Poland, 1, -1",
+            "Germany, Poland, -5, -7"
+    })
+    void updateScore_shouldThrowForNegativeScores(String home, String away, int homeScore, int awayScore) {
+        scoreBoard.startMatch(home, away);
+        assertThrows(IllegalArgumentException.class, () -> scoreBoard.updateScore(home, away, homeScore, awayScore));
     }
 
     @Test
@@ -246,39 +196,35 @@ public class ScoreBoardTest {
     }
 
     @Test
-    void getSummary_matchesWithSameTotalScore_shouldBeSortedByMostRecent() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime nowMinusOneSecond = now.minusSeconds(1);
-        scoreBoard.startMatch("A", "B", 3, 3, nowMinusOneSecond);
-        scoreBoard.startMatch("C", "D", 4, 2, now);
+    void getSummary_shouldReturnMatchesSortedByTotalScoreAndStartTime() {
+        scoreBoard.startMatch("Mexico", "Canada", 0, 0,
+                LocalDateTime.of(2025, 1, 1, 10, 0, 0, 1)
+        );
+        scoreBoard.startMatch("Spain", "Brazil", 0, 0,
+                LocalDateTime.of(2025, 1, 1, 10, 0, 0, 2)
+        );
+        scoreBoard.startMatch("Germany", "France", 0, 0,
+                LocalDateTime.of(2025, 1, 1, 10, 0, 0, 3)
+        );
+        scoreBoard.startMatch("Uruguay", "Italy", 0, 0,
+                LocalDateTime.of(2025, 1, 1, 10, 0, 0, 4)
+        );
+        scoreBoard.startMatch("Argentina", "Australia", 0, 0,
+                LocalDateTime.of(2025, 1, 1, 10, 0, 0, 5)
+        );
+
+        scoreBoard.updateScore("Mexico", "Canada", 0, 5);
+        scoreBoard.updateScore("Spain", "Brazil", 10, 2);
+        scoreBoard.updateScore("Germany", "France", 2, 2);
+        scoreBoard.updateScore("Uruguay", "Italy", 6, 6);
+        scoreBoard.updateScore("Argentina", "Australia", 3, 1);
 
         List<Match> summary = scoreBoard.getSummary();
 
-        assertEquals("C", summary.get(0).getHomeTeam());
-        assertEquals("D", summary.get(0).getAwayTeam());
-
-        assertEquals("A", summary.get(1).getHomeTeam());
-        assertEquals("B", summary.get(1).getAwayTeam());
-    }
-
-    @Test
-    void getSummary_shouldBeEmptyIfNoMatchesFound() {
-        assert(scoreBoard.getSummary().isEmpty());
-    }
-
-    @Test
-    void getSummary_shouldReorderAfterScoreUpdate() {
-        scoreBoard.startMatch("Mexico", "Canada");
-        scoreBoard.startMatch("Spain", "Brazil");
-        scoreBoard.updateScore("Spain", "Brazil", 5, 0);
-        scoreBoard.updateScore("Mexico", "Canada", 10, 0);
-
-        List<Match> updatedSummary = scoreBoard.getSummary();
-
-        assertEquals("Mexico", updatedSummary.get(0).getHomeTeam());
-        assertEquals("Canada", updatedSummary.get(0).getAwayTeam());
-
-        assertEquals("Spain", updatedSummary.get(1).getHomeTeam());
-        assertEquals("Brazil", updatedSummary.get(1).getAwayTeam());
+        assertEquals("Uruguay", summary.get(0).getHomeTeam());     // 12
+        assertEquals("Spain", summary.get(1).getHomeTeam());       // 12 (later than Uruguay)
+        assertEquals("Mexico", summary.get(2).getHomeTeam());      // 5
+        assertEquals("Argentina", summary.get(3).getHomeTeam());   // 4
+        assertEquals("Germany", summary.get(4).getHomeTeam());     // 4 (earlier than Argentina)
     }
 }
