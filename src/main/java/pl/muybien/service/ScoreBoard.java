@@ -1,12 +1,11 @@
 package pl.muybien.service;
 
+import pl.muybien.dto.MatchDTO;
+import pl.muybien.mapper.MatchDTOMapper;
 import pl.muybien.model.Match;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ScoreBoard {
     private final Map<String, Match> matches = new LinkedHashMap<>();
@@ -50,12 +49,13 @@ public class ScoreBoard {
         match.setAwayScore(awayScore);
     }
 
-    public List<Match> getSummary() {
+    public List<MatchDTO> getSummary() {
         return matches.values().stream()
                 .sorted(Comparator
                         .comparingInt((Match m) -> m.getHomeScore() + m.getAwayScore())
                         .reversed()
                         .thenComparing(Match::getStartTime, Comparator.reverseOrder()))
+                .map(MatchDTOMapper::toDTO)
                 .toList();
     }
 

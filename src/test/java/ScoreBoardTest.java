@@ -2,7 +2,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import pl.muybien.model.Match;
+import pl.muybien.dto.MatchDTO;
 import pl.muybien.service.ScoreBoard;
 
 import java.time.LocalDateTime;
@@ -29,12 +29,12 @@ public class ScoreBoardTest {
     })
     void startMatch_shouldInitializeMatchAndScore(String inputHome, String inputAway) {
         scoreBoard.startMatch(inputHome, inputAway);
-        Match match = scoreBoard.getSummary().getFirst();
+        MatchDTO match = scoreBoard.getSummary().getFirst();
 
-        assertEquals(inputHome, match.getHomeTeam());
-        assertEquals(inputAway, match.getAwayTeam());
-        assertEquals(0, match.getHomeScore());
-        assertEquals(0, match.getAwayScore());
+        assertEquals(inputHome, match.homeTeam());
+        assertEquals(inputAway, match.awayTeam());
+        assertEquals(0, match.homeScore());
+        assertEquals(0, match.awayScore());
     }
 
     @ParameterizedTest
@@ -49,13 +49,13 @@ public class ScoreBoardTest {
     void startMatch_shouldInitializeMatchAndScore_intendedScoreAndTime(String inputHome, String inputAway) {
         LocalDateTime time = LocalDateTime.now();
         scoreBoard.startMatch(inputHome, inputAway, 5, 7, time);
-        Match match = scoreBoard.getSummary().getFirst();
+        MatchDTO match = scoreBoard.getSummary().getFirst();
 
-        assertEquals(inputHome, match.getHomeTeam());
-        assertEquals(inputAway, match.getAwayTeam());
-        assertEquals(5, match.getHomeScore());
-        assertEquals(7, match.getAwayScore());
-        assertEquals(time, match.getStartTime());
+        assertEquals(inputHome, match.homeTeam());
+        assertEquals(inputAway, match.awayTeam());
+        assertEquals(5, match.homeScore());
+        assertEquals(7, match.awayScore());
+        assertEquals(time, match.startTime());
     }
 
     @ParameterizedTest
@@ -71,10 +71,10 @@ public class ScoreBoardTest {
     })
     void startMatch_shouldNormalizeTeamName(String inputHome, String inputAway, String expectedHome, String expectedAway) {
         scoreBoard.startMatch(inputHome, inputAway);
-        Match match = scoreBoard.getSummary().getFirst();
+        MatchDTO match = scoreBoard.getSummary().getFirst();
 
-        assertEquals(expectedHome, match.getHomeTeam());
-        assertEquals(expectedAway, match.getAwayTeam());
+        assertEquals(expectedHome, match.homeTeam());
+        assertEquals(expectedAway, match.awayTeam());
     }
 
     @ParameterizedTest
@@ -128,9 +128,9 @@ public class ScoreBoardTest {
         scoreBoard.startMatch(inputHome, inputAway);
         scoreBoard.updateScore(inputHome, inputAway, inputHomeScore, inputAwayScore);
 
-        Match match = scoreBoard.getSummary().getFirst();
-        assertEquals(inputHomeScore, match.getHomeScore());
-        assertEquals(inputAwayScore, match.getAwayScore());
+        MatchDTO match = scoreBoard.getSummary().getFirst();
+        assertEquals(inputHomeScore, match.homeScore());
+        assertEquals(inputAwayScore, match.awayScore());
     }
 
     @Test
@@ -177,22 +177,22 @@ public class ScoreBoardTest {
         scoreBoard.startMatch("Argentina", "Australia");
         scoreBoard.updateScore("Argentina", "Australia", 3, 1);
 
-        List<Match> summary = scoreBoard.getSummary();
+        List<MatchDTO> summary = scoreBoard.getSummary();
 
-        assertEquals("Uruguay", summary.get(0).getHomeTeam());
-        assertEquals("Italy", summary.get(0).getAwayTeam());
+        assertEquals("Uruguay", summary.get(0).homeTeam());
+        assertEquals("Italy", summary.get(0).awayTeam());
 
-        assertEquals("Spain", summary.get(1).getHomeTeam());
-        assertEquals("Brazil", summary.get(1).getAwayTeam());
+        assertEquals("Spain", summary.get(1).homeTeam());
+        assertEquals("Brazil", summary.get(1).awayTeam());
 
-        assertEquals("Mexico", summary.get(2).getHomeTeam());
-        assertEquals("Canada", summary.get(2).getAwayTeam());
+        assertEquals("Mexico", summary.get(2).homeTeam());
+        assertEquals("Canada", summary.get(2).awayTeam());
 
-        assertEquals("Argentina", summary.get(3).getHomeTeam());
-        assertEquals("Australia", summary.get(3).getAwayTeam());
+        assertEquals("Argentina", summary.get(3).homeTeam());
+        assertEquals("Australia", summary.get(3).awayTeam());
 
-        assertEquals("Germany", summary.get(4).getHomeTeam());
-        assertEquals("France", summary.get(4).getAwayTeam());
+        assertEquals("Germany", summary.get(4).homeTeam());
+        assertEquals("France", summary.get(4).awayTeam());
     }
 
     @Test
@@ -219,12 +219,12 @@ public class ScoreBoardTest {
         scoreBoard.updateScore("Uruguay", "Italy", 6, 6);
         scoreBoard.updateScore("Argentina", "Australia", 3, 1);
 
-        List<Match> summary = scoreBoard.getSummary();
+        List<MatchDTO> summary = scoreBoard.getSummary();
 
-        assertEquals("Uruguay", summary.get(0).getHomeTeam());     // 12
-        assertEquals("Spain", summary.get(1).getHomeTeam());       // 12 (later than Uruguay)
-        assertEquals("Mexico", summary.get(2).getHomeTeam());      // 5
-        assertEquals("Argentina", summary.get(3).getHomeTeam());   // 4
-        assertEquals("Germany", summary.get(4).getHomeTeam());     // 4 (earlier than Argentina)
+        assertEquals("Uruguay", summary.get(0).homeTeam());     // 12
+        assertEquals("Spain", summary.get(1).homeTeam());       // 12 (later than Uruguay)
+        assertEquals("Mexico", summary.get(2).homeTeam());      // 5
+        assertEquals("Argentina", summary.get(3).homeTeam());   // 4
+        assertEquals("Germany", summary.get(4).homeTeam());     // 4 (earlier than Argentina)
     }
 }

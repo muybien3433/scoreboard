@@ -65,7 +65,7 @@ public class ScoreBoardApp {
                         var summary = scoreBoard.getSummary();
                         for (var match : summary) {
                             System.out.printf("%s %d - %d %s\n",
-                                    match.getHomeTeam(), match.getHomeScore(), match.getAwayScore(), match.getAwayTeam()
+                                    match.homeTeam(), match.homeScore(), match.awayScore(), match.awayTeam()
                             );
                         }
                         break;
